@@ -57,7 +57,6 @@ export default {
     this.w = rect.right - rect.left
     this.h = rect.bottom - rect.top
     this.ctx = this.canvas.getContext('2d')
-    this.ctx.font = '20px Microsoft YaHei'
 
     const textList = [
       '弹幕',

@@ -1,24 +1,17 @@
-const express = require('express');
-const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
-const path = require('path');
+const WebSocket = require('ws');
+const server = new WebSocket.Server({ port: 8086 });
 
-app.use(express.static(path.join(__dirname)));
-
-app.get('/', function (req, res) {
-    res.sendFile('public/index.html');
-});
-
-io.on('connection', function (socket) {
-    console.log('a user connected');
-
-    socket.on('get barrage from user', function (message) {
-        console.log('get barrage from user', message);
-        socket.broadcast.emit('get barrage from server', message);
+server.on('connection', function connection(ws) {
+    console.log(`[SERVER] connection()`);
+    ws.on('message', function incoming(message) {
+      console.log('received: %s', message);
+      // 广播消息给所有客户端
+      server.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send( clientName + " -> " + message);
+        }
+      });
     });
-});
-
-http.listen(6666, function () {
-    console.log('listening on localhost:6666');
-});
+    ws.send('something');
+  });
+  
