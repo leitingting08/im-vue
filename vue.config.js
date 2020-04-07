@@ -1,31 +1,27 @@
-const path = require('path')
-
 module.exports = {
   devServer: {
-    disableHostCheck: true
+    disableHostCheck: true,
   },
   runtimeCompiler: true,
-  publicPath:'',
+  publicPath: '',
   configureWebpack: {
     output: {
-      filename: 'js/[name].js'
-    }
+      filename: 'js/[name].js',
+    },
   },
   css: {
     extract: {
-      filename: 'css/[name].css'
+      filename: 'css/[name].css',
     },
     loaderOptions: {
       less: {
-        javascriptEnabled: true
-      }
-    }
+        javascriptEnabled: true,
+      },
+    },
   },
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config.optimization.splitChunks(false)
     const types = ['vue-modules', 'vue', 'normal-modules', 'normal']
-    types.forEach(type =>
-      config.module.rule('less').oneOf(type)
-    )
-  }
+    types.forEach((type) => config.module.rule('less').oneOf(type))
+  },
 }
