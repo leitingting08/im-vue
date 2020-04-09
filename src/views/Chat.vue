@@ -1,16 +1,19 @@
 <template>
   <div class="chat">
     <div>
-      <i class="iconfont icon-users" /> 
+      <i class="iconfont icon-users" />
       {{total_count}} 人
     </div>
     <el-card class="box-card">
-        <div v-for="{msg_type,receive_time,name} in messages" :key="msg_type">
-            {{ receive_time }}  {{name}}进入聊天室
+      <div v-for="{msg_type,receive_time,name} in messages" :key="msg_type" class="msg">
+        <div class="txtcenter">
+          <span class="boardcast">{{ receive_time }} {{name}}进入聊天室</span>
         </div>
+      </div>
     </el-card>
     <div class="global-flex">
-      <el-input/><el-button type="primary">发送</el-button>
+      <el-input />
+      <el-button type="primary">发送</el-button>
     </div>
   </div>
 </template>
@@ -35,25 +38,29 @@ export default {
   methods: {
     open(){
       let that = this
-      this.$prompt('请输入昵称', '提示', {
+      const NAME = sessionStorage.getItem('USER_NAME')
+      if(!NAME){
+         this.$prompt('请输入昵称', '提示', {
          showClose: false,
          showCancelButton: false,
           confirmButtonText: '确定',
           inputPattern: /^[\u4E00-\u9FA5A-Za-z0-9_]+$/,
           inputErrorMessage: '名称格式不正确'
         }).then(({ value }) => {
-          console.log(value)
           that.chatClient.send({
             msg_type: 1,
             send_time: timeNow,
             name: value
           })
+          sessionStorage.setItem('USER_NAME',value)
         })
+      }
     },
     handleChat() { // 初始化链接
         this.chatClient.init('ws://localhost:8086')
         this.chatClient.on('message', (data) => {
         const { code, message, results } = data
+        console.log(results)
          this.total_count = results.online_count
          switch(results.msg_type){
            case 1: // 1 进入聊天室广播
@@ -67,11 +74,30 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.chat{
-  .box-card{
+.chat {
+  color: #333;
+  font-size: 12px;
+  .box-card {
     min-height: 500px;
+    .msg {
+      padding-bottom: 15px;
+      .txtleft {
+        text-align: left;
+      }
+      .txtright {
+        text-align: right;
+      }
+      .txtcenter {
+        text-align: center;
+      }
+      .boardcast {
+        border-radius: 2em;
+        padding: 2px 10px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+    }
   }
-  .global-flex{
+  .global-flex {
     display: flex;
   }
 }
