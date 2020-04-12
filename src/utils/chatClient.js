@@ -38,7 +38,7 @@ class chatClient {
 
   ping () {
     this.send({
-      msg_type: 7
+      msg_type: 1
     })
   }
 

@@ -21,6 +21,7 @@
 <script>
 import ChatClient from '@/utils/chatClient'
 import dayjs from 'dayjs'
+import axios from 'axios'
 const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
 export default {
   name: 'Chat',
@@ -31,11 +32,19 @@ export default {
       messages: []
     }
   },
+  created() {
+    this.chatClient.init('ws://localhost:8086')
+    this.getHistoryMsgs()
+  },
   mounted() {
     this.open()
     this.handleChat()
   },
   methods: {
+    async getHistoryMsgs(){
+      const res = await axios.get('http://localhost:8086/messages')
+      this.messages = res.data.results
+    },
     open(){
       let that = this
       const NAME = sessionStorage.getItem('USER_NAME')
@@ -46,9 +55,10 @@ export default {
           confirmButtonText: '确定',
           inputPattern: /^[\u4E00-\u9FA5A-Za-z0-9_]+$/,
           inputErrorMessage: '名称格式不正确'
-        }).then(({ value }) => {
+        }).then(async ({ value }) => {
+          const { success } = await axios.post('http://localhost:8086/saveusers',{user_name: value})
           that.chatClient.send({
-            msg_type: 1,
+            msg_type: 2,
             send_time: timeNow,
             user_name: value
           })
@@ -57,16 +67,17 @@ export default {
       }
     },
     handleChat() { // 初始化链接
-        this.chatClient.init('ws://localhost:8086')
         this.chatClient.on('message', (data) => {
-        const { code, message, results } = data
-        console.log(results)
-         this.total_count = results.online_count
-         switch(results.msg_type){
-           case 1: // 1 进入聊天室广播
-            this.messages.push(results)
-             break
-         }
+          if(data&&data.results){
+            const { code, message, results } = data
+            const { online_count, msg_type } = results
+            this.total_count = online_count?online_count: 0
+            switch(msg_type){
+              case 2: // 1 进入聊天室广播
+                this.messages.push(results)
+                break
+            }
+          }
       })
     }
   },
