@@ -5,9 +5,9 @@
       {{total_count}} 人
     </div>
     <el-card class="box-card">
-      <div v-for="{msg_type,receive_time,name} in messages" :key="msg_type" class="msg">
+      <div v-for="{msg_type,send_time,user_name} in messages" :key="msg_type" class="msg">
         <div class="txtcenter">
-          <span class="boardcast">{{ receive_time }} {{name}}进入聊天室</span>
+          <span class="boardcast">{{ send_time }}  {{user_name}}进入聊天室</span>
         </div>
       </div>
     </el-card>
@@ -50,7 +50,7 @@ export default {
           that.chatClient.send({
             msg_type: 1,
             send_time: timeNow,
-            name: value
+            user_name: value
           })
           sessionStorage.setItem('USER_NAME',value)
         })
