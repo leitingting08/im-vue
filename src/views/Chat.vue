@@ -5,9 +5,9 @@
       {{total_count}} 人
     </div>
     <el-card class="box-card">
-      <div v-for="{msg_type,send_time,user_name} in messages" :key="msg_type" class="msg">
+      <div v-for="({msg_type,send_time,user_name},index) in messages" :key="index" class="msg">
         <div class="txtcenter">
-          <span class="boardcast">{{ send_time }}  {{user_name}}进入聊天室</span>
+          <span class="boardcast">{{ send_time }} {{user_name}}进入聊天室</span>
         </div>
       </div>
     </el-card>
@@ -49,20 +49,31 @@ export default {
       let that = this
       const NAME = sessionStorage.getItem('USER_NAME')
       if(!NAME){
-         this.$prompt('请输入昵称', '提示', {
+        this.$prompt('请输入昵称', '提示', {
          showClose: false,
          showCancelButton: false,
           confirmButtonText: '确定',
           inputPattern: /^[\u4E00-\u9FA5A-Za-z0-9_]+$/,
-          inputErrorMessage: '名称格式不正确'
-        }).then(async ({ value }) => {
-          const { success } = await axios.post('http://localhost:8086/saveusers',{user_name: value})
-          that.chatClient.send({
-            msg_type: 2,
-            send_time: timeNow,
-            user_name: value
-          })
-          sessionStorage.setItem('USER_NAME',value)
+          inputErrorMessage: '名称格式不正确',
+         beforeClose: async (action, instance, done)=>{
+              const value = instance.inputValue
+              const res = await axios.post('http://localhost:8086/saveusers',{user_name: value})
+              console.log(res)
+              if(res.data.success){
+                  that.chatClient.send({
+                    msg_type: 2,
+                    send_time: timeNow,
+                    user_name: value
+                  })
+                sessionStorage.setItem('USER_NAME',value)
+                done()
+              }else{
+                that.$message({
+                  message: res.data.msg||'保存失败',
+                  type: 'error'
+                })
+              }
+          }
         })
       }
     },
