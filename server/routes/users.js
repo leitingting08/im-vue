@@ -21,7 +21,7 @@ router.post("/",  (req, res, next)=> {
             results: []
         });
       }else{
-        var user = new User(ret)
+        var user = new User(params)
         dbOp.save(user)
         res.json({
           success: true,

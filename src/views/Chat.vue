@@ -34,8 +34,17 @@
 import ChatClient from '@/utils/chatClient'
 import dayjs from 'dayjs'
 import axios from 'axios'
+
 const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
 const NAME = sessionStorage.getItem('USER_NAME')
+const host = require('../utils/getIp')()
+console.log(host)
+const ip = '192.168.216.16'
+const port = 8086
+const wsURL = `ws://${ip}:${port}`
+const httpURL = `http://${ip}:${port}`
+const historyMsgUrl = `${httpURL}/messages`
+const userSaveUrl = `${httpURL}/saveusers`
 export default {
   name: 'Chat',
   data() {
@@ -48,7 +57,7 @@ export default {
     }
   },
   created() {
-    this.chatClient.init('ws://localhost:8086')
+    this.chatClient.init(wsURL)
     this.getHistoryMsgs()
   },
   mounted() {
@@ -68,7 +77,7 @@ export default {
         window.scroll({top:t+100,left:0,behavior:'smooth' });
     },
     async getHistoryMsgs(){
-      const res = await axios.get('http://localhost:8086/messages')
+      const res = await axios.get(historyMsgUrl)
       this.messages = res.data.results
     },
     open(){
@@ -82,13 +91,14 @@ export default {
           inputErrorMessage: '名称格式不正确',
          beforeClose: async (action, instance, done)=>{
               const value = instance.inputValue
-              const res = await axios.post('http://localhost:8086/saveusers',{user_name: value})
+              const res = await axios.post(userSaveUrl,{user_name: value})
               if(res.data.success){
                   that.chatClient.send({
                     msg_type: 2,
                     send_time: timeNow,
                     user_name: value
                   })
+                this.self = value
                 sessionStorage.setItem('USER_NAME',value)
                 done()
               }else{
@@ -132,7 +142,7 @@ export default {
   font-size: 12px;
   padding-bottom: 80px;
   .box-card {
-    min-height: 500px;
+    min-height: 100vh;
     &-msg {
       .content {
         padding: 20px 0;
