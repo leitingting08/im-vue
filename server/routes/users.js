@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const dbOp = require('../utils/dbOp')
 
-/* GET 存储用户信息 */
+/* POST 存储用户信息 */
 router.post("/",  (req, res, next)=> {
   const params = req.body
   User.find(params, (err,ret)=>{

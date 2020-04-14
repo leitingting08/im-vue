@@ -4,7 +4,7 @@
       <i class="iconfont icon-users" />
     </div>
     <!-- <video-player ref="videoPlayer" :options="playerOptions"></video-player> -->
-    <canvas ref="canvas" style="width: 100%;"></canvas>
+    <canvas ref="canvas"></canvas>
     <div>
       <i class="iconfont icon-avatar" />
       <input type="text" @keyup.prevent.stop.enter="send" v-model="content" />

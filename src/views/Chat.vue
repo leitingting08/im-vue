@@ -1,10 +1,10 @@
 <template>
   <div class="chat">
-    <div>
+    <div class="header">
       <i class="iconfont icon-users" />
       {{total_count}} 人
     </div>
-    <el-card class="box-card">
+    <div class="box-card" ref="chat">
       <div
         v-for="({msg_type,send_time,user_name,msg_content},index) in messages"
         :key="index"
@@ -20,7 +20,7 @@
           </div>
         </div>
       </div>
-    </el-card>
+    </div>
     <div class="footer">
       <div class="flex">
         <el-input v-model="inputMsg" @keyup.enter.native="sendMsg" />
@@ -36,10 +36,7 @@ import dayjs from 'dayjs'
 import axios from 'axios'
 
 const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
-const NAME = sessionStorage.getItem('USER_NAME')
-const host = require('../utils/getIp')()
-console.log(host)
-const ip = '192.168.216.16'
+const ip = require('../utils/getIp')()
 const port = 8086
 const wsURL = `ws://${ip}:${port}`
 const httpURL = `http://${ip}:${port}`
@@ -53,7 +50,7 @@ export default {
       total_count: 0,
       messages: [],
       inputMsg:'',
-      self: NAME
+      self: sessionStorage.getItem('USER_NAME')
     }
   },
   created() {
@@ -70,11 +67,24 @@ export default {
        this.chatClient.send({
           msg_type: 3,
           send_time: timeNow,
-          user_name: NAME,
+          user_name: this.self,
           msg_content: this.inputMsg
         })
-        const t =document.body.clientHeight;
-        window.scroll({top:t+100,left:0,behavior:'smooth' });
+        this.inputMsg = ''
+        this.scrollBottom(true)
+    },
+    scrollBottom (smooth = false) { // 滚动到底部
+      setTimeout(() => {
+        const msgWindow = this.$refs.chat
+        if (typeof msgWindow.scroll === 'function') {
+          msgWindow.scroll({
+            top: msgWindow.scrollHeight,
+            behavior: smooth ? 'smooth' : 'auto'
+          })
+        } else {
+          msgWindow.scrollTop = msgWindow.scrollHeight
+        }
+      }, 10)
     },
     async getHistoryMsgs(){
       const res = await axios.get(historyMsgUrl)
@@ -82,7 +92,7 @@ export default {
     },
     open(){
       let that = this
-      if(!NAME){
+      if(!this.self){
         this.$prompt('请输入昵称', '提示', {
          showClose: false,
          showCancelButton: false,
@@ -100,6 +110,7 @@ export default {
                   })
                 this.self = value
                 sessionStorage.setItem('USER_NAME',value)
+                this.scrollBottom(true)
                 done()
               }else{
                 that.$message({
@@ -117,6 +128,7 @@ export default {
             const { code, message, results } = data
             const { online_count, msg_type } = results
             this.total_count = online_count?online_count: 0
+            this.scrollBottom(true)
             switch(msg_type){
               case 2: // 1心跳 2 进入聊天室广播 3消息收发
                 this.messages.push(results)
@@ -137,12 +149,26 @@ export default {
 @green: #00b9a3;
 .colorange{color:@orange;}
 .chat {
+  width: 100%;
+  height: 100%;
   position: relative;
   color: #333;
   font-size: 12px;
-  padding-bottom: 80px;
+  background: #f5f5f5;
+  overflow: hidden;
+  .header{
+    background: #fff;
+    padding: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
   .box-card {
-    min-height: 100vh;
+    padding: 50px 10px 40px;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
     &-msg {
       .content {
         padding: 20px 0;
@@ -160,7 +186,7 @@ export default {
         min-height: fit-content;
         max-width: 400px;
         border-radius: 6px;
-        background: #f7f8fa;
+        background: #fff;
         word-break: break-word;
       }
       
@@ -186,9 +212,9 @@ export default {
   .footer{
     position: fixed;
     bottom: 0;
-    width: 100%;
-    height: 100px;
+    left:0;
     background:#fff;
+    width:100%;
     .flex {
       display: flex;
     }

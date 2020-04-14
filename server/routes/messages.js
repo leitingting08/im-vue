@@ -5,6 +5,7 @@ const Message = require('../models/message');
 
 /* GET 历史消息 */
 router.get('/', (req, res, next)=> {
+  console.log(req)
   Message.find((err,ret)=>{
     if(err){
      res.json({

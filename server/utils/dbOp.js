@@ -9,8 +9,5 @@ module.exports = {
                 console.log("保存成功：" + res);
             }
      })
-   },
-   cb: (err, data) => { // redis 存储
-    console.log('err: ', err, ' data: ', data, ' data type: ', typeof data);
-    }
+   }
 }

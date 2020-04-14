@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import './styles/global.less'
 import './styles/iconfont.less'
 import VideoPlayer from 'vue-video-player'
 import 'vue-video-player/src/custom-theme.css'

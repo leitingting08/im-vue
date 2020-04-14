@@ -17,7 +17,7 @@ app.all('*',function (req, res, next) {
   res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
 
   if (req.method == 'OPTIONS') {
-    res.send(200); // 让options请求快速返回
+    res.sendStatus(200); // 让options请求快速返回
   }
   else {
     next();
@@ -38,6 +38,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/saveusers', users);
 app.use('/messages', messages);
+/**
+ * 默认连接localhost:6379，具体配置参数可以参考文档https://github.com/NodeRedis/node_redis
+ **/
+const redis = require('redis');
+const redisClient = redis.createClient();
+app.use((req, res, next) =>{
+    const ua = req.headers['user-agent'];
+    redisClient.zadd('online', Date.now(), ua, next);
+})
+app.use((req, res, next) =>{
+  const min = 60 * 1000;
+    const ago = Date.now() - min;
+    redisClient.zrevrangebyscore('online', '+inf', ago,  (err, users) =>{
+      if (err) return next(err);
+      req.online = users;
+      next();
+    });
+})
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

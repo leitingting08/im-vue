@@ -101,8 +101,6 @@ server.on('listening', onListening);
  * 监听socket接口
  */
 const dayjs = require('dayjs')
-// const redis = require('redis');
-// const redisClient = redis.createClient(); //默认连接localhost:6379，具体配置参数可以参考文档https://github.com/NodeRedis/node_redis
 const dbOp = require('../utils/dbOp')
 const Message = require('../models/message');
 const onConnection = ws => {
@@ -135,8 +133,7 @@ const onConnection = ws => {
         online_count: onlineCount,
         msg_content
       }
-      // redisClient.rpush('messages', JSON.stringify(results), dbOp.cb); // 存redis
-      // redisClient.lrange('messages', 0, -1, dbOp.cb);
+     
       var message = new Message(results)
       dbOp.save(message)
     } else {
@@ -153,7 +150,22 @@ const onConnection = ws => {
         }
       }
     })
-
+  })
+  ws.on('close', (close,reason)=>{
+    console.log(close, onlineUsers)
+     if(onlineUsers.hasOwnProperty(ws.user_name)) {  //将退出的用户从在线列表中删除
+        delete onlineUsers[ws.user_name];
+        //在线人数-1
+        onlineCount--;
+    }
   })
 }
+
+/** 
+ * 监听websocket
+ * {listening} WebSocket 服务开始监听的事件
+ * {connection} WebSocket 服务被客户端连接上的事件
+ * {close} 服务端收到了客户端关闭连接的事件，由客户端发起的关闭
+ * {error} 监听WebSocket 通信过程中出错的事件
+ **/
 wss.on('connection', onConnection)
