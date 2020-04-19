@@ -8,7 +8,6 @@ const app = require('../app');
 const debug = require('debug')('server:server');
 const http = require('http');
 const WebSocket = require('ws');
-// const ws = require('../socket')
 
 /**
  * Normalize a port into a number, string, or false.
@@ -103,28 +102,34 @@ server.on('listening', onListening);
 const dayjs = require('dayjs')
 const dbOp = require('../utils/dbOp')
 const Message = require('../models/message');
+const redis = require("redis"); 
+// 创建 redis 客户端
+let redisClient = redis.createClient(); // key value
+// 存储所有 WebSocket 用户
+let clientsArr = [];
+const cb = (err, data) => {
+  console.log('err: ', err, ' data: ', data, ' data type: ', typeof data);
+}
+
 const onConnection = ws => {
   let results = null
-  let onlineCount = 0
-  let onlineUsers = {}
   const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
+  let onlineCount = 1
   ws.on('message', (msg) => {
+    redisClient.lrange("messages", 0, -1, function(err, applies) { // 从redis读取
+        // 由于 redis 的数据都是字符串，所以需要把数组中每一项转成对象
+        applies = applies.map(item => JSON.parse(item));
+        onlineCount = applies.length
+    });
     const {
       msg_type,
       user_name,
       msg_content
     } = JSON.parse(msg)
     if (msg_type !== 1) {
-      if (msg_type === 2) {
-        // 1心跳 2用户进入 3消息
-        //将新加入用户的唯一标识当作socket的名称，后面退出的时候会用到
-        ws.user_name = user_name;
-        //检查在线列表，如果不在里面就加入
-        if (!onlineUsers.hasOwnProperty(user_name)) {
-          onlineUsers[user_name] = user_name;
-          //在线人数+1
-          onlineCount++;
-        }
+      if (msg_type === 2) { // 1心跳 2用户进入 3消息
+         // 收到消息为1 即用户进入
+         redisClient.rpush("messages", msg, cb); // 向redis中添加
       }
       results = {
         msg_type,
@@ -133,11 +138,16 @@ const onConnection = ws => {
         online_count: onlineCount,
         msg_content
       }
-     
       var message = new Message(results)
       dbOp.save(message)
     } else {
-      ws.send(msg)
+      ws.send(JSON.stringify({
+        code: 0,
+        message: '接收成功',
+        results:{
+          online_count: onlineCount
+        }
+      }))
     }
     wss.clients.forEach((client) => { // 广播消息给所有客户端
       if (client.readyState === WebSocket.OPEN) {
@@ -151,13 +161,9 @@ const onConnection = ws => {
       }
     })
   })
-  ws.on('close', (close,reason)=>{
-    console.log(close, onlineUsers)
-     if(onlineUsers.hasOwnProperty(ws.user_name)) {  //将退出的用户从在线列表中删除
-        delete onlineUsers[ws.user_name];
-        //在线人数-1
-        onlineCount--;
-    }
+  ws.on('close', ()=>{
+    // 当某一个人关闭连接离开时，将这个人从当前存储用户的数组中移除
+    clientsArr = clientsArr.filter(client => client != ws);
   })
 }
 

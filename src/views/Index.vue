@@ -2,8 +2,8 @@
   <div class="index">
     <div class="title">弹幕测试标题</div>
     <div class="video-container">
-      <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video"></video>
-      <canvas ref="canvas" width="952" height="532" class="canvas"></canvas>
+      <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video" controls="controls">您的浏览器不支持 video 标签</video>
+      <canvas ref="canvas" width="952" height="470" class="canvas"></canvas>
     </div>
 
    <div class="footer">
@@ -26,7 +26,7 @@ export default {
       w: null,
       h: null,
       ctx: null,
-      content: '',
+      inputMsg:''
     }
   },
   mounted() {
@@ -57,7 +57,7 @@ export default {
         color: color,
         offset: offset,
         width: width,
-        font: '30px Arial'
+        font: '28px Arial'
       }
       this.barrageList.push(barrage)
     },
@@ -100,6 +100,11 @@ export default {
     getOffset() {
       return +(Math.random() * 4).toFixed(1) + 1
     },
+    sendMsg() {
+      if(!this.inputMsg) return
+      this.shoot(this.inputMsg)
+      this.inputMsg = ''
+    }
   },
 }
 </script>
@@ -107,6 +112,8 @@ export default {
 <style lang="less" scoped>
 .index {
   .title{
+    width: 952px;
+    margin: auto;
     padding: 10px;
   }
   .video-container {
@@ -126,7 +133,7 @@ export default {
   }
   .footer{
     width: 940px;
-    margin: auto;
+    margin: 10px auto;
     .iconfont{font-size: 40px;margin-right: 5px;color:cornflowerblue;}
     .flex{
       display: flex;
