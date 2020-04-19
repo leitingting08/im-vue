@@ -105,8 +105,6 @@ const Message = require('../models/message');
 const redis = require("redis"); 
 // 创建 redis 客户端
 let redisClient = redis.createClient(); // key value
-// 存储所有 WebSocket 用户
-let clientsArr = [];
 const cb = (err, data) => {
   console.log('err: ', err, ' data: ', data, ' data type: ', typeof data);
 }
@@ -163,7 +161,7 @@ const onConnection = ws => {
   })
   ws.on('close', ()=>{
     // 当某一个人关闭连接离开时，将这个人从当前存储用户的数组中移除
-    clientsArr = clientsArr.filter(client => client != ws);
+    // client.lrem('messages', 0, msg);
   })
 }
 

@@ -9,7 +9,7 @@
    <div class="footer">
       <div class="flex">
         <i class="iconfont icon-avatar" />
-        <el-input v-model="inputMsg" @keyup.enter.native="sendMsg" />
+        <el-input v-model.trim="inputMsg" @keyup.enter.native="sendMsg" />
         <el-button type="primary" @click="sendMsg">发送弹幕</el-button>
       </div>
     </div>

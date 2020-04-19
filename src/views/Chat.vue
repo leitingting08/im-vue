@@ -23,7 +23,7 @@
     </div>
     <div class="footer">
       <div class="flex">
-        <el-input v-model="inputMsg" @keyup.enter.native="sendMsg" />
+        <el-input v-model.trim="inputMsg" @keyup.enter.native="sendMsg" />
         <el-button type="primary" @click="sendMsg">发送</el-button>
       </div>
     </div>
