@@ -11,7 +11,7 @@
         class="msg"
       >
         <div class="txtcenter" v-if="msg_type===2">
-          <span class="boardcast">{{ send_time }} {{user_name}}进入聊天室</span>
+          <span class="boardcast">{{ send_time }} <span class="name">{{user_name}}</span> 进入聊天室</span>
         </div>
         <div v-if="msg_type===3" class="box-card-msg">
           <div :class="self===user_name?'txtright':'txtleft'">{{send_time}} <span class="colorange">@{{user_name}}</span></div>
@@ -101,6 +101,13 @@ export default {
           inputErrorMessage: '名称格式不正确',
          beforeClose: async (action, instance, done)=>{
               const value = instance.inputValue
+              if(value.length>10){
+                that.$message({
+                  message: '昵称不能超过10个字符',
+                  type: 'error'
+                })
+                return
+              }
               const res = await axios.post(userSaveUrl,{user_name: value})
               if(res.data.success){
                   that.chatClient.send({
@@ -206,6 +213,9 @@ export default {
         border-radius: 2em;
         padding: 2px 10px;
         background: rgba(0, 0, 0, 0.1);
+        .name{
+          color: @orange;
+        }
       }
     }
   }
