@@ -7,7 +7,6 @@
 const app = require('../app');
 const debug = require('debug')('server:server');
 const http = require('http');
-const WebSocket = require('ws');
 
 /**
  * Normalize a port into a number, string, or false.
@@ -84,6 +83,7 @@ const server = http.createServer(app);
 /**
  * Create ws server.
  */
+const WebSocket = require('ws');
 const wss = new WebSocket.Server({
   server
 });
@@ -102,9 +102,7 @@ server.on('listening', onListening);
 const dayjs = require('dayjs')
 const dbOp = require('../utils/dbOp')
 const Message = require('../models/message');
-const redis = require("redis"); 
-// 创建 redis 客户端
-let redisClient = redis.createClient(); // key value
+const redisClient = require('../models/redis')
 const cb = (err, data) => {
   console.log('err: ', err, ' data: ', data, ' data type: ', typeof data);
 }
@@ -112,56 +110,58 @@ const cb = (err, data) => {
 const onConnection = ws => {
   let results = null
   const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
-  let onlineCount = 1
+  let onlineCount = 0
   ws.on('message', (msg) => {
-    redisClient.lrange("messages", 0, -1, function(err, applies) { // 从redis读取
-        // 由于 redis 的数据都是字符串，所以需要把数组中每一项转成对象
-        applies = applies.map(item => JSON.parse(item));
-        onlineCount = applies.length
-    });
     const {
       msg_type,
       user_name,
       msg_content
     } = JSON.parse(msg)
-    if (msg_type !== 1) {
-      if (msg_type === 2) { // 1心跳 2用户进入 3消息
-         // 收到消息为1 即用户进入
-         redisClient.rpush("messages", msg, cb); // 向redis中添加
+    if (msg_type !== 'PING') { // 心跳监测
+      if (msg_type === 'ENTER') { // 用户进入
+         ws.user_name = user_name
+         onlineCount++
+         redisClient.rpush("names", user_name, cb); // 向redis中添加
       }
       results = {
         msg_type,
         send_time: timeNow,
         user_name,
-        online_count: onlineCount,
         msg_content
       }
       var message = new Message(results)
       dbOp.save(message)
     } else {
-      ws.send(JSON.stringify({
-        code: 0,
-        message: '接收成功',
-        results:{
-          online_count: onlineCount
-        }
-      }))
+      ws.send(JSON.stringify(msg))
     }
     wss.clients.forEach((client) => { // 广播消息给所有客户端
       if (client.readyState === WebSocket.OPEN) {
-        if (results && msg_type !== 1) {
+        if (results && msg_type !== 'PING') {
           client.send(JSON.stringify({
             code: 0,
             message: '接收成功',
-            results
+            results,
+            onlineCount
           }))
         }
       }
     })
   })
-  ws.on('close', ()=>{
+  ws.on('close', (err,info)=>{
     // 当某一个人关闭连接离开时，将这个人从当前存储用户的数组中移除
-    // client.lrem('messages', 0, msg);
+    if(!onlineCount) return
+    onlineCount--
+    redisClient.lrem('names', 0, ws.user_name);
+    ws.send(JSON.stringify({
+      code: 0,
+      message: '接收成功',
+      results:{
+        msg_type:'LEAVE',
+        send_time: timeNow,
+        user_name: ws.user_name,
+        onlineCount
+      }
+    }))
   })
 }
 

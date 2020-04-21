@@ -10,10 +10,10 @@
         :key="index"
         class="msg"
       >
-        <div class="txtcenter" v-if="msg_type===2">
-          <span class="boardcast">{{ send_time }} <span class="name">{{user_name}}</span> 进入聊天室</span>
+        <div class="txtcenter" v-if="['ENTER','LEAVE'].includes(msg_type)">
+          <span class="boardcast">{{ send_time }} <span class="name">{{user_name}}</span> {{msg_type==='ENTER'?'进入':'离开'}}直播间</span>
         </div>
-        <div v-if="msg_type===3" class="box-card-msg">
+        <div v-if="msg_type==='MESSAGE'" class="box-card-msg">
           <div :class="self===user_name?'txtright':'txtleft'">{{send_time}} <span class="colorange">@{{user_name}}</span></div>
           <div :class="self===user_name?'txtright':'txtleft'" class="content">
             <span class="message">{{ msg_content }}</span>
@@ -47,7 +47,7 @@ export default {
   data() {
     return {
       chatClient: new ChatClient(),
-      total_count: 0,
+      total_count: 1,
       messages: [],
       inputMsg:'',
       self: sessionStorage.getItem('USER_NAME')
@@ -65,7 +65,7 @@ export default {
     sendMsg() {
       if(!this.inputMsg) return
        this.chatClient.send({
-          msg_type: 3,
+          msg_type: 'MESSAGE',
           send_time: timeNow,
           user_name: this.self,
           msg_content: this.inputMsg
@@ -89,6 +89,7 @@ export default {
     async getHistoryMsgs(){
       const res = await axios.get(historyMsgUrl)
       this.messages = res.data.results
+      this.total_count = res.data.onlineCount
     },
     open(){
       let that = this
@@ -111,7 +112,7 @@ export default {
               const res = await axios.post(userSaveUrl,{user_name: value})
               if(res.data.success){
                   that.chatClient.send({
-                    msg_type: 2,
+                    msg_type: 'ENTER',
                     send_time: timeNow,
                     user_name: value
                   })
@@ -132,17 +133,12 @@ export default {
     handleChat() { // 初始化链接
         this.chatClient.on('message', (data) => {
           if(data&&data.results){
-            const { code, message, results } = data
-            const { online_count, msg_type } = results
-            this.total_count = online_count?online_count: 0
-            this.scrollBottom(true)
-            switch(msg_type){
-              case 2: // 1心跳 2 进入聊天室广播 3消息收发
-                this.messages.push(results)
-                break
-              case 3: // 1 进入聊天室广播
-                this.messages.push(results)
-                break
+            const { code, message, results,onlineCount } = data
+            const { msg_type } = results
+            if(msg_type!=='PING'){ // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
+              this.messages.push(results)
+              this.total_count = onlineCount?onlineCount: 0
+              this.scrollBottom(true)
             }
           }
       })
