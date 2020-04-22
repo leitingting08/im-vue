@@ -1,16 +1,33 @@
 <template>
   <div class="index">
-    <div class="title">弹幕测试标题</div>
-    <div class="video-container">
-      <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video" controls="controls">您的浏览器不支持 video 标签</video>
-      <canvas ref="canvas" width="952" height="470" class="canvas"></canvas>
-    </div>
+    <div class="index-container">
+      <!-- 标题 -->
+      <div class="index-container-title">
+        <div class="l-con">
+          <svg class="live" viewBox="0 0 1024 1024"><path d="M392.448 275.911111a92.416 92.416 0 1 1-184.832 0 92.416 92.416 0 0 1 184.832 0" fill="#23ADE5"></path><path d="M826.624 464.583111l-63.744 36.864v-48.64a72.206222 72.206222 0 0 0-71.68-71.936H190.72a72.192 72.192 0 0 0-71.936 71.936V748.231111a71.936 71.936 0 0 0 71.936 71.936H691.2a71.936 71.936 0 0 0 71.936-71.936v-23.808l63.488 37.888a51.2 51.2 0 0 0 76.8-44.544V508.871111a51.2 51.2 0 0 0-76.8-44.288M572.928 369.351111c79.459556 0.142222 143.985778-64.156444 144.128-143.616 0.142222-79.459556-64.156444-143.985778-143.616-144.128-79.260444-0.142222-143.701333 63.857778-144.128 143.104-0.426667 79.459556 63.644444 144.213333 143.104 144.64h0.512" fill="#48CFE5"></path><path d="M425.216 512.967111l124.16 71.936a25.6 25.6 0 0 1 0 42.496l-124.16 71.68a25.6 25.6 0 0 1-37.12-21.248V534.471111a25.6 25.6 0 0 1 37.12-21.504" fill="#FDDE80"></path></svg>
+          <a href="//live.bilibili.com/" target="_blank" class="name">正在直播</a>
+          <div class="text-info"><span>当前共有 29328 个在线直播</span></div>
+        </div>
+      </div>
 
-   <div class="footer">
-      <div class="flex">
-        <i class="iconfont icon-avatar" />
-        <el-input v-model.trim="inputMsg" @keyup.enter.native="sendMsg" />
-        <el-button type="primary" @click="sendMsg">发送弹幕</el-button>
+      <!-- 房间块 -->
+      <div class="index-container-grid">
+        <div class="block" v-for="i in 8" :key="i" @click="openRoom(i)">
+          <div class="pic">
+            <img src="https://i0.hdslb.com/bfs/live/new_room_cover/dce78854b38c2dd7b94abc147a5e3fc9f73ec961.jpg@257w_145h_1c_100q.webp" alt="">
+            <div class="count">
+              <i class="iconfont icon-users" /> 250.5万
+            </div>
+          </div>
+          <div class="up">
+            <img src="https://i1.hdslb.com/bfs/face/2996e22a24eed2d7767e452627a9130207defe6a.jpg@45w_45h_1c_100q.webp" alt="">
+            <div class="txt">
+              <p class="name">LexBurner</p>
+              <p title="小学生来啦！" class="desc">小学生来啦！</p>
+              <p class="tag">王者荣耀</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -21,89 +38,19 @@ export default {
   name: 'Index',
   data() {
     return {
-      barrageList: [],
-      canvas: null,
-      w: null,
-      h: null,
-      ctx: null,
-      inputMsg:''
     }
   },
   mounted() {
-    this.canvas = this.$refs.canvas
-    let rect = this.canvas.getBoundingClientRect()
-    this.w = rect.right - rect.left
-    this.h = rect.bottom - rect.top
-    this.ctx = this.canvas.getContext('2d')
-
-    const textList = ['富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善']
-    this.draw()
-    textList.forEach((t) => {
-      this.shoot(t)
-    })
+  
   },
   methods: {
-    //添加弹幕列表
-    shoot(value) {
-      let top = this.getTop()
-      let color = this.getColor()
-      let offset = this.getOffset()
-      let width = Math.ceil(this.ctx.measureText(value).width)
-
-      let barrage = {
-        value: value,
-        top: top,
-        left: this.w,
-        color: color,
-        offset: offset,
-        width: width,
-        font: '28px Arial'
-      }
-      this.barrageList.push(barrage)
-    },
-    //开始绘制
-    draw() {
-      if (this.barrageList.length) {
-        this.ctx.clearRect(0, 0, this.w, this.h)
-        for (let i = 0; i < this.barrageList.length; i++) {
-          let b = this.barrageList[i]
-          if (b.left + b.width <= 0) {
-            this.barrageList.splice(i, 1)
-            i--
-            continue
-          }
-          b.left -= b.offset
-          this.drawText(b)
+    openRoom(i){
+      this.$router.push({
+        name:'room',
+        params:{
+          id: i
         }
-      }
-      requestAnimationFrame(this.draw.bind(this))
-    },
-    //绘制文字
-    drawText(barrage) {
-      this.ctx.fillStyle = barrage.color
-      this.ctx.font = barrage.font
-      this.ctx.fillText(barrage.value, barrage.left, barrage.top)
-    },
-
-    //获取随机颜色
-    getColor() {
-      return '#' + Math.floor(Math.random() * 0xffffff).toString(16)
-    },
-
-    //获取随机top
-    getTop() {
-      //canvas绘制文字x,y坐标是按文字左下角计算，预留30px
-      return Math.floor(Math.random() * (this.h - 30)) + 30
-    },
-
-    //获取偏移量
-    getOffset() {
-      return +(Math.random() * 4).toFixed(1) + 1
-    },
-    sendMsg() {
-      if(!this.inputMsg) return
-      this.shoot(this.inputMsg)
-      this.inputMsg = ''
+      })
     }
   },
 }
@@ -111,32 +58,69 @@ export default {
 
 <style lang="less" scoped>
 .index {
-  .title{
-    width: 952px;
-    margin: auto;
-    padding: 10px;
-  }
-  .video-container {
-    position: relative;
-    width: 952px;
-    height: 532px;
-    margin: auto;
-    .video {
-      width: 100%;
-      height: 100%;
+  &-container{
+    width: 1000px;
+    margin:100px auto;
+    &-title{
+      padding: 50px 20px;
+      .l-con{
+        display: flex;
+        align-items: center;
+        
+        .live{
+          width: 40px;
+        }
+        .name{
+          margin: 0 20px 0 10px;
+          color:#333;
+          vertical-align: bottom;
+          font-size: 20px;
+          line-height: 36px;
+        }
+        .text-info{
+          color: #505050;
+          line-height: 36px;
+        }
+      }
     }
-    .canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-  }
-  .footer{
-    width: 940px;
-    margin: 10px auto;
-    .iconfont{font-size: 40px;margin-right: 5px;color:cornflowerblue;}
-    .flex{
-      display: flex;
+    &-grid{
+      display: grid;
+      grid-template-columns: 25% 25% 25% 25%;
+      .block{
+        cursor: pointer;
+        &:hover{
+          opacity: 0.6;
+        }
+        .pic{
+          position: relative;
+          // height: 500px;
+         img{
+            border-radius: 3px;
+            width: 96%;
+         }
+          .count{
+            position: absolute;
+            color: #fff;
+            left: 10px;
+            top: 113px;
+            z-index: 1;
+            font-size: 12px;
+          }
+        }
+        .up{
+          color: #666;
+          display: flex;
+          padding: 15px 0 30px;
+          img{
+            width: 60px;
+            border-radius: 50%;
+           
+          }
+          .txt{
+             padding-left: 10px;
+          }
+        }
+      }
     }
   }
 }
