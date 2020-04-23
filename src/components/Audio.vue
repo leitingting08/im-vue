@@ -1,5 +1,5 @@
 <template>
-  <div class="index">
+  <div class="index" v-if="vedioId">
     <div class="title">弹幕测试标题</div>
     <div class="video-container">
       <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video" controls="controls">您的浏览器不支持 video 标签</video>
@@ -20,18 +20,20 @@
 export default {
   name: 'Aduio',
   props:{
-    textList:{
-      type: Array,
-      default: ()=>[]
+    vedioId:{
+      type: Number,
+      default: 0
     }
   },
   data() {
     return {
+      textList: ['富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善'],
       barrageList: [],
       canvas: null,
       w: null,
       h: null,
       ctx: null,
+      vedioDom: null,
       inputMsg:''
     }
   },
@@ -41,14 +43,29 @@ export default {
     this.w = rect.right - rect.left
     this.h = rect.bottom - rect.top
     this.ctx = this.canvas.getContext('2d')
-
-    const { textList } = this
+    
     this.draw()
-    textList.forEach((t) => {
-      this.shoot(t)
-    })
+    this.vedioDom = this.$refs.videoPlayer
+    let that = this
+    this.vedioDom.addEventListener('play',()=>{  
+     console.log('开始播放')
+     that.play()
+    });  
+
+    this.vedioDom.addEventListener('pause',()=>{  
+     console.log('暂定播放')
+    })  
+    
   },
   methods: {
+    play() {
+      const { textList } = this
+      console.log(textList)
+      let that = this
+      textList.forEach((t) => {
+        that.shoot(t)
+      })
+    },
     //添加弹幕列表
     shoot(value) {
       let top = this.getTop()
