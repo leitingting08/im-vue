@@ -19,6 +19,12 @@
 <script>
 export default {
   name: 'Aduio',
+  props:{
+    textList:{
+      type: Array,
+      default: ()=>[]
+    }
+  },
   data() {
     return {
       barrageList: [],
@@ -36,7 +42,7 @@ export default {
     this.h = rect.bottom - rect.top
     this.ctx = this.canvas.getContext('2d')
 
-    const textList = ['富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善']
+    const { textList } = this
     this.draw()
     textList.forEach((t) => {
       this.shoot(t)
