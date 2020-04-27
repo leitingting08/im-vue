@@ -11,7 +11,7 @@
         class="msg"
       >
         <div class="txtcenter" v-if="['ENTER','LEAVE'].includes(msg_type)">
-          <span class="boardcast">{{ send_time }} <span class="name">{{user_name}}</span> {{msg_type==='ENTER'?'进入':'离开'}}直播间</span>
+          <span class="boardcast">{{ send_time }} <span class="name">{{user_name}}</span> {{msg_type==='ENTER'?'进入':'离开'}}房间</span>
         </div>
         <div v-if="msg_type==='MESSAGE'" class="box-card-msg">
           <div :class="self===user_name?'txtright':'txtleft'">{{send_time}} <span class="colorange">@{{user_name}}</span></div>

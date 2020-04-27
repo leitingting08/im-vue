@@ -12,7 +12,7 @@ let routes = [
     component: () => import('./views/Room.vue'),
   },
   {
-    path: '/chat',
+    path: '/chat/:id',
     name: 'chat',
     label: '聊天室',
     component: () => import('./views/Chat.vue'),
