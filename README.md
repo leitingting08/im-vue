@@ -1,4 +1,4 @@
-# vue + websocket + node + mongodb 构建聊天室
+# im-vue 前端
 
 ## 安装项目依赖
 ```
