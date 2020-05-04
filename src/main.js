@@ -6,7 +6,6 @@ import './styles/iconfont.less'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
-Vue.use(VideoPlayer)
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
