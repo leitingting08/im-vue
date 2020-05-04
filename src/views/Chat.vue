@@ -37,7 +37,7 @@ import axios from 'axios'
 
 console.log(process.env.NODE_ENV)
 const timeNow = dayjs().format('YYYY-MM-DD HH:mm:ss')
-const ip = process.env.NODE_ENV === 'production' ? '49.235.157.201' : '127.0.0.1'
+const ip = process.env.NODE_ENV === 'development' ? '127.0.0.1' : '49.235.157.201'
 const port = 8086
 const wsURL = `ws://${ip}:${port}`
 const httpURL = `http://${ip}:${port}`
