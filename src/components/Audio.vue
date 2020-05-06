@@ -3,7 +3,7 @@
     <div class="title">弹幕测试标题</div>
     <div class="video-container">
       <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video" controls="controls">您的浏览器不支持 video 标签</video>
-      <canvas ref="canvas" width="952" height="470" class="canvas"></canvas>
+      <canvas ref="canvas" width="946" height="470" class="canvas"></canvas>
     </div>
 
    <div class="footer">
@@ -34,7 +34,8 @@ export default {
       h: null,
       ctx: null,
       vedioDom: null,
-      inputMsg:''
+      inputMsg:'',
+      animiate: null
     }
   },
   mounted() {
@@ -54,6 +55,7 @@ export default {
 
     this.vedioDom.addEventListener('pause',()=>{  
      console.log('暂定播放')
+     that.stop()
     })  
     
   },
@@ -99,7 +101,10 @@ export default {
           this.drawText(b)
         }
       }
-      requestAnimationFrame(this.draw.bind(this))
+     this.animiate = requestAnimationFrame(this.draw.bind(this))
+    },
+    stop(){
+      cancelAnimationFrame(this.animiate)
     },
     //绘制文字
     drawText(barrage) {
@@ -135,13 +140,13 @@ export default {
 <style lang="less" scoped>
 .index {
   .title{
-    width: 952px;
+    width: 946px;
     margin: auto;
     padding: 10px;
   }
   .video-container {
     position: relative;
-    width: 952px;
+    width: 946px;
     height: 532px;
     margin: auto;
     .video {
