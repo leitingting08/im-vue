@@ -80,7 +80,7 @@ export default {
       this.chatClient.send(results)
       if(this.self) this.messages.push(results)
       await this.$nextTick()
-      this.$refs.messages[this.messages.length-1].sending = true
+      if(this.messages.length) this.$refs.messages[this.messages.length-1].sending = true
       this.inputMsg = ""
       this.scrollBottom(true)
     },
@@ -100,6 +100,13 @@ export default {
     },
     async getHistoryMsgs() {
       const res = await axios.get(historyMsgUrl)
+      if(!res||!res.data.success){
+         this.$message({
+                message: `接口请求失败：${res.data.msg||''}`,
+                type: "error"
+          })
+          return
+      }
       this.messages = res.data.results
       this.total_count = res.data.onlineCount
       this.scrollBottom(true)
@@ -149,13 +156,13 @@ export default {
       this.chatClient.on("message", (data) => {
         if (data && data.results) {
           const { code, message, results, onlineCount } = data
-          const { msg_type, msg_id } = results
-          console.log(msg_id,this.sendingMsgs)
+          const { msg_type, msg_id, user_name } = results
           msg_id && delete this.sendingMsgs[msg_id]
-           this.$refs.messages[this.messages.length-1].sending = false
+           if(this.messages.length) this.$refs.messages[this.messages.length-1].sending = false
           if (msg_type !== "ACK") {
             // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
-            if(!this.self) this.messages.push(results)
+            console.log(this.messages.findIndex(item=>item.msg_id))
+            if(this.messages.findIndex(item=>item.msg_id)===-1 || this.self!==user_name){this.messages.push(results)}
             this.total_count = onlineCount ? onlineCount : 0
             this.scrollBottom(true)
           }
