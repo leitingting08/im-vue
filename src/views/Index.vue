@@ -48,8 +48,8 @@ export default {
       data:[
         {name: 'room',title:'动画',img: img0, avatar: avatar0},
         {name: 'chat',title:'聊天室',img: img1, avatar: avatar1},
-        {name: 'course',title:'直播课堂',img: img2, avatar: avatar2},
-        {name: 'live',title:'游戏直播',img: img3, avatar: avatar3}
+        // {name: 'course',title:'直播课堂',img: img2, avatar: avatar2}, // TODO: 录屏直播和聊天功能同时存在
+        // {name: 'live',title:'游戏直播',img: img3, avatar: avatar3} // TODO: 直播和实时弹幕
       ]
     }
   },
