@@ -1,54 +1,50 @@
 <template>
   <div class="message-wrap">
-     <div class="txtcenter" v-if="['ENTER', 'LEAVE'].includes(msg_type)">
-          <span class="boardcast"
-            >{{ send_time }} <span class="name">{{ user_name }}</span>
-            {{ msg_type === "ENTER" ? "进入" : "离开" }}房间</span
-          >
-        </div>
-        <div v-if="msg_type === 'MESSAGE'" class="box-card-msg">
-          <div :class="self ? 'txtright' : 'txtleft'">
-            {{ send_time }} <span class="colorange">@{{ user_name }}</span>
-          </div>
-          <div
-            :class="self ? 'txtright' : 'txtleft'"
-            class="content"
-          >
-            <span class="message"
-              >{{ msg_content }}
-              <span
-                class="tooltip"
-                :class="self ? 'left' : 'right'"
-              >
-              <i class="el-icon-loading" v-if="sending"/>
-                <el-tooltip
-                  v-if="sendError"
-                  effect="dark"
-                  content="发送超时请重试"
-                  placement="top"
-                >
-                  <span class="error-sign"><i class="el-icon-warning" /></span>
-                </el-tooltip>
-              </span>
-            </span>
-          </div>
-        </div>
+    <div class="txtcenter" v-if="['ENTER', 'LEAVE'].includes(msg_type)">
+      <span class="boardcast"
+        >{{ send_time | timeFormat }} <span class="name">{{ user_name }}</span>
+        {{ msg_type === "ENTER" ? "进入" : "离开" }}房间</span
+      >
+    </div>
+    <div v-if="msg_type === 'MESSAGE'" class="box-card-msg">
+      <div :class="self ? 'txtright' : 'txtleft'">
+        {{ send_time | timeFormat }}
+        <span class="colorange">@{{ user_name }}</span>
+      </div>
+      <div :class="self ? 'txtright' : 'txtleft'" class="content">
+        <span class="message"
+          >{{ msg_content }}
+          <span class="tooltip" :class="self ? 'left' : 'right'">
+            <i class="el-icon-loading" v-if="sending" />
+            <el-tooltip
+              v-if="sendError"
+              effect="dark"
+              content="发送超时请重试"
+              placement="top"
+            >
+              <span class="error-sign"><i class="el-icon-warning" /></span>
+            </el-tooltip>
+          </span>
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import dayjs from "dayjs"
 export default {
   /** 一条聊天消息 */
-  name: 'Message',
+  name: "Message",
   props: {
-    id: [Number,String], // 消息id
+    id: [Number, String], // 消息id
     self: Boolean, // 1别人，2来自自己
     msg_type: String, // 见 msgTypes
     msg_content: String, // 消息内容
     user_name: String,
-    send_time: String
+    send_time: [Number, String],
   },
-  data () {
+  data() {
     return {
       sending: false, // 是否显示正在发送按钮
       sendError: false, // 是否显示正在发送按钮
@@ -56,18 +52,23 @@ export default {
     }
   },
   computed: {
-     isSending () {
+    isSending() {
       if (!this.id) return false
       return this.$parent.sendingMsgs[this.id]
     },
   },
-  created () {
+  created() {
     setTimeout(() => {
       if (this.isSending) {
         this.sending = false
         this.sendError = true
       }
     }, this.waitingTime)
+  },
+  filters: {
+    timeFormat(timestamp) {
+      return dayjs(Number(timestamp)).format("YYYY-MM-DD HH:mm:ss")
+    },
   },
 }
 </script>
@@ -78,60 +79,60 @@ export default {
 .colorange {
   color: @orange;
 }
- .message-wrap {
-      padding-bottom: 15px;
-      .txtleft {
-        text-align: left;
-      }
-      .txtright {
-        text-align: right;
-      }
-      .txtcenter {
-        text-align: center;
-      }
-      .boardcast {
-        border-radius: 2em;
-        padding: 2px 10px;
-        background: rgba(0, 0, 0, 0.1);
-        .name {
-          color: @orange;
-        }
-      }
-       .content {
-        padding: 20px 0;
-        &.txtright {
-          .message {
-            background: @green;
-            color: #fff;
-          }
-        }
-      }
+.message-wrap {
+  padding-bottom: 15px;
+  .txtleft {
+    text-align: left;
+  }
+  .txtright {
+    text-align: right;
+  }
+  .txtcenter {
+    text-align: center;
+  }
+  .boardcast {
+    border-radius: 2em;
+    padding: 2px 10px;
+    background: rgba(0, 0, 0, 0.1);
+    .name {
+      color: @orange;
+    }
+  }
+  .content {
+    padding: 20px 0;
+    &.txtright {
       .message {
-        padding: 15px 10px;
-        min-height: -webkit-fit-content;
-        min-height: -moz-fit-content;
-        min-height: fit-content;
-        max-width: 400px;
-        border-radius: 6px;
-        background: #fff;
-        word-break: break-word;
-        position: relative;
-        .tooltip {
-          position: absolute;
-          .el-icon-loading{
-            color: #888;
-          }
-          &.left {
-            left: -20px;
-            right: auto;
-          }
-          &.right {
-            left: auto;
-            right: -20px;
-          }
-        }
+        background: @green;
+        color: #fff;
       }
-        .error-sign {
+    }
+  }
+  .message {
+    padding: 15px 10px;
+    min-height: -webkit-fit-content;
+    min-height: -moz-fit-content;
+    min-height: fit-content;
+    max-width: 400px;
+    border-radius: 6px;
+    background: #fff;
+    word-break: break-word;
+    position: relative;
+    .tooltip {
+      position: absolute;
+      .el-icon-loading {
+        color: #888;
+      }
+      &.left {
+        left: -20px;
+        right: auto;
+      }
+      &.right {
+        left: auto;
+        right: -20px;
+      }
+    }
+  }
+  .error-sign {
     top: 18px;
     left: 10px;
     height: 1em;
@@ -141,5 +142,5 @@ export default {
       cursor: help;
     }
   }
-    }
+}
 </style>

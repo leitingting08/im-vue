@@ -36,7 +36,7 @@ import dayjs from "dayjs"
 import axios from "axios"
 import Message from "@/components/Message"
 
-var timestamp = (new Date()).valueOf()
+var timestamp = new Date().valueOf()
 const timeNow = dayjs().format("YYYY-MM-DD HH:mm:ss")
 const ip =
   process.env.NODE_ENV === "development" ? "127.0.0.1" : "49.235.157.201"
@@ -45,6 +45,8 @@ const wsURL = `ws://${ip}:${port}`
 const httpURL = `http://${ip}:${port}`
 const historyMsgUrl = `${httpURL}/messages`
 const userSaveUrl = `${httpURL}/saveusers`
+const myName = sessionStorage.getItem("USER_NAME")
+
 export default {
   name: "Chat",
   components: { Message },
@@ -55,11 +57,14 @@ export default {
       messages: [],
       sendingMsgs: {}, // 待发送队列
       inputMsg: "",
-      self: sessionStorage.getItem("USER_NAME")
+      self: myName,
     }
   },
   created() {
-    this.chatClient.init(wsURL)
+    if (myName)
+      this.chatClient.init(
+        `${wsURL}?user=${myName}&room=${this.$route.params.id}`
+      )
     this.getHistoryMsgs()
   },
   mounted() {
@@ -74,13 +79,14 @@ export default {
         send_time: timeNow,
         user_name: this.self,
         msg_content: this.inputMsg,
-        msg_id: timestamp
+        msg_id: timestamp,
       }
       this.sendingMsgs[timestamp] = this.inputMsg // 发送消息先进入待发送队列 收到反馈消息后移除
       this.chatClient.send(results)
-      if(this.self) this.messages.push(results)
+      if (this.self) this.messages.push(results)
       await this.$nextTick()
-      if(this.messages.length) this.$refs.messages[this.messages.length-1].sending = true
+      if (this.messages.length)
+        this.$refs.messages[this.messages.length - 1].sending = true
       this.inputMsg = ""
       this.scrollBottom(true)
     },
@@ -91,7 +97,7 @@ export default {
         if (typeof msgWindow.scroll === "function") {
           msgWindow.scroll({
             top: msgWindow.scrollHeight,
-            behavior: smooth ? "smooth" : "auto"
+            behavior: smooth ? "smooth" : "auto",
           })
         } else {
           msgWindow.scrollTop = msgWindow.scrollHeight
@@ -100,12 +106,12 @@ export default {
     },
     async getHistoryMsgs() {
       const res = await axios.get(historyMsgUrl)
-      if(!res||!res.data.success){
-         this.$message({
-                message: `接口请求失败：${res.data.msg||''}`,
-                type: "error"
-          })
-          return
+      if (!res || !res.data.success) {
+        this.$message({
+          message: `接口请求失败：${res.data.msg || ""}`,
+          type: "error",
+        })
+        return
       }
       this.messages = res.data.results
       this.total_count = res.data.onlineCount
@@ -126,16 +132,20 @@ export default {
             if (value.length > 10) {
               that.$message({
                 message: "昵称不能超过10个字符",
-                type: "error"
+                type: "error",
               })
               return
             }
+            this.chatClient.init(
+              `${wsURL}?user=${value}&room=${this.$route.params.id}`
+            )
+            this.handleChat()
             const res = await axios.post(userSaveUrl, { user_name: value })
             if (res.data.success) {
               that.chatClient.send({
                 msg_type: "ENTER",
                 send_time: timeNow,
-                user_name: value
+                user_name: value,
               })
               this.self = value
               sessionStorage.setItem("USER_NAME", value)
@@ -144,32 +154,43 @@ export default {
             } else {
               that.$message({
                 message: res.data.msg || "保存失败",
-                type: "error"
+                type: "error",
               })
             }
-          }
+          },
         })
       }
     },
     handleChat() {
-      // 初始化链接
+      // 初始化链接 监听收到的消息
       this.chatClient.on("message", (data) => {
         if (data && data.results) {
           const { code, message, results, onlineCount } = data
           const { msg_type, msg_id, user_name } = results
-          msg_id && delete this.sendingMsgs[msg_id]
-           if(this.messages.length) this.$refs.messages[this.messages.length-1].sending = false
           if (msg_type !== "ACK") {
+            if (msg_id) {
+              delete this.sendingMsgs[msg_id]
+            }
+            const alias = this.messages.findIndex(
+              (item) => item.msg_id === msg_id
+            )
+            if (this.messages.length)
+              this.$refs.messages[this.messages.length - 1].sending = false
             // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
-            console.log(this.messages.findIndex(item=>item.msg_id))
-            if(this.messages.findIndex(item=>item.msg_id)===-1 || this.self!==user_name){this.messages.push(results)}
+            if (
+              alias === -1 ||
+              this.self !== user_name ||
+              msg_type !== "MESSAGE"
+            ) {
+              this.messages.push(results)
+            }
             this.total_count = onlineCount ? onlineCount : 0
             this.scrollBottom(true)
           }
         }
       })
-    }
-  }
+    },
+  },
 }
 </script>
 
