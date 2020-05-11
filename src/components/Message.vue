@@ -19,10 +19,14 @@
             <el-tooltip
               v-if="sendError"
               effect="dark"
-              content="发送超时请重试"
+              content="发送超时请点击重试"
               placement="top"
             >
-              <span class="error-sign"><i class="el-icon-warning" /></span>
+              <span
+                class="error-sign"
+                @click="sendAgain(send_time, msg_content, id)"
+                ><i class="el-icon-warning"
+              /></span>
             </el-tooltip>
           </span>
         </span>
@@ -49,21 +53,31 @@ export default {
       sending: false, // 是否显示正在发送按钮
       sendError: false, // 是否显示正在发送按钮
       waitingTime: 5000, // 发送超时检测时间
+      // isResend: false,
     }
   },
   computed: {
     isSending() {
-      if (!this.id) return false
+      if (!this.id) return
       return this.$parent.sendingMsgs[this.id]
     },
   },
   created() {
-    setTimeout(() => {
-      if (this.isSending) {
-        this.sending = false
-        this.sendError = true
-      }
-    }, this.waitingTime)
+    this.waiting()
+  },
+  methods: {
+    async waiting() {
+      await setTimeout(() => {
+        if (this.isSending) {
+          console.log("senqq1", this.isSending)
+          this.sending = false
+          this.sendError = true
+        }
+      }, this.waitingTime)
+    },
+    sendAgain(send_time, msg_content, msg_id) {
+      this.$emit("send-again", send_time, msg_content, msg_id)
+    },
   },
   filters: {
     timeFormat(timestamp) {
@@ -139,7 +153,7 @@ export default {
     color: #f55;
     line-height: 1;
     i {
-      cursor: help;
+      cursor: pointer;
     }
   }
 }

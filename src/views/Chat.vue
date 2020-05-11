@@ -18,6 +18,7 @@
           :user_name="user_name"
           :msg_content="msg_content"
           :self="self === user_name"
+          @send-again="sendAgain"
         />
       </div>
     </div>
@@ -36,8 +37,6 @@ import dayjs from "dayjs"
 import axios from "axios"
 import Message from "@/components/Message"
 
-var timestamp = new Date().valueOf()
-const timeNow = dayjs().format("YYYY-MM-DD HH:mm:ss")
 const ip =
   process.env.NODE_ENV === "development" ? "127.0.0.1" : "49.235.157.201"
 const port = 8086
@@ -76,11 +75,42 @@ export default {
     }
   },
   methods: {
+    async sendAgain(send_time, msg_content, msg_id) {
+      console.log(send_time, msg_content, msg_id)
+      delete this.sendingMsgs[send_time]
+      this.messages.splice(
+        this.messages.findIndex((i) => i.send_time === send_time),
+        1
+      )
+      const timestamp = new Date().valueOf()
+      const results = {
+        msg_type: "MESSAGE",
+        send_time: timestamp,
+        user_name: this.self,
+        msg_content: msg_content,
+        msg_id: msg_id,
+      }
+      this.sendingMsgs[msg_id] = msg_content
+      this.chatClient.send(results)
+      if (this.self) this.messages.push(results)
+      await this.$nextTick()
+      this.$refs.messages.forEach((el) => {
+        console.log(el, el.id)
+        if (this.sendingMsgs[el.send_time] && el.id === msg_id) {
+          el.sending = true
+          el.sendError = false
+          // el.isResend = true
+        }
+      })
+      this.scrollBottom(true)
+    },
     async sendMsg() {
+      const timestamp = new Date().valueOf()
+      console.log(timestamp)
       if (!this.inputMsg) return
       const results = {
         msg_type: "MESSAGE",
-        send_time: timeNow,
+        send_time: timestamp,
         user_name: this.self,
         msg_content: this.inputMsg,
         msg_id: timestamp,
@@ -148,7 +178,7 @@ export default {
             if (res.data.success) {
               that.chatClient.send({
                 msg_type: "ENTER",
-                send_time: timeNow,
+                send_time: new Date().valueOf(),
                 user_name: value,
               })
               this.self = value
@@ -178,8 +208,8 @@ export default {
             const alias = this.messages.findIndex(
               (item) => item.msg_id === msg_id
             )
-            if (this.messages.length)
-              this.$refs.messages[this.messages.length - 1].sending = false
+            // if (this.messages.length)
+            //   this.$refs.messages[this.messages.length - 1].sending = false
             // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
             if (
               alias === -1 ||
