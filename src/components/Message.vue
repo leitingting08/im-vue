@@ -7,6 +7,7 @@
       >
     </div>
     <div v-if="msg_type === 'MESSAGE'" class="box-card-msg">
+      {{ isSending }}
       <div :class="self ? 'txtright' : 'txtleft'">
         {{ send_time | timeFormat }}
         <span class="colorange">@{{ user_name }}</span>

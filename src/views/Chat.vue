@@ -57,13 +57,11 @@ export default {
       sendingMsgs: {}, // 待发送队列
       inputMsg: "",
       self: myName,
+      reConnectTimes: 0,
     }
   },
   created() {
-    if (myName)
-      this.chatClient.init(
-        `${wsURL}?user=${myName}&room=${this.$route.params.id}`
-      )
+    if (myName) this.initSocket(myName)
     this.getHistoryMsgs()
   },
   mounted() {
@@ -75,6 +73,11 @@ export default {
     }
   },
   methods: {
+    initSocket(username) {
+      this.chatClient.init(
+        `${wsURL}?user=${username}&room=${this.$route.params.id}`
+      )
+    },
     async sendAgain(send_time, msg_content, msg_id) {
       console.log(send_time, msg_content, msg_id)
       delete this.sendingMsgs[send_time]
@@ -95,7 +98,7 @@ export default {
       if (this.self) this.messages.push(results)
       await this.$nextTick()
       this.$refs.messages.forEach((el) => {
-        console.log(el, el.id)
+        console.log(el.id)
         if (this.sendingMsgs[el.send_time] && el.id === msg_id) {
           el.sending = true
           el.sendError = false
@@ -170,9 +173,7 @@ export default {
               })
               return
             }
-            this.chatClient.init(
-              `${wsURL}?user=${value}&room=${this.$route.params.id}`
-            )
+            this.initSocket(value)
             this.handleChat()
             const res = await axios.post(userSaveUrl, { user_name: value })
             if (res.data.success) {
@@ -218,11 +219,43 @@ export default {
             ) {
               this.messages.push(results)
             }
+            this.$refs.messages.forEach((el) => {
+              if (el.id === msg_id) {
+                el.sending = false
+              }
+            })
             this.total_count = onlineCount ? onlineCount : 0
             this.scrollBottom(true)
           }
         }
       })
+      this.chatClient.on("close", () => {
+        // 是否断网 socket断开事件触发快于navigator.onLine状态变更，延时再判断
+        setTimeout(() => {
+          console.log("navigator.onLine:", navigator.onLine)
+          if (navigator.onLine) {
+            this.reConnect()
+          }
+        }, 1000)
+      })
+      window.addEventListener("online", () => {
+        console.log("网络恢复连接")
+        this.reConnect()
+      })
+      this.chatClient.on("open", () => {
+        this.reConnectTimes = 0 // 重连成功归0
+      })
+    },
+    reConnect() {
+      if (this.reConnectTimes > 20) {
+        this.$message({
+          message: `断线超过20次，请检查网络状况`,
+          type: "error",
+        })
+        return
+      }
+      this.reConnectTimes += 1
+      myName && this.initSocket(myName)
     },
   },
 }
