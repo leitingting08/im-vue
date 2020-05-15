@@ -2,12 +2,12 @@
   <div class="message-wrap">
     <div class="txtcenter" v-if="['ENTER', 'LEAVE'].includes(msg_type)">
       <span class="boardcast"
-        >{{ send_time | timeFormat }} <span class="name">{{ user_name }}</span>
+        >{{ send_time | timeFormat }}
+        <span class="name">{{ user_name }}<span v-if="self">（我）</span></span>
         {{ msg_type === "ENTER" ? "进入" : "离开" }}房间</span
       >
     </div>
     <div v-if="msg_type === 'MESSAGE'" class="box-card-msg">
-      {{ isSending }}
       <div :class="self ? 'txtright' : 'txtleft'">
         {{ send_time | timeFormat }}
         <span class="colorange">@{{ user_name }}</span>

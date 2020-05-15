@@ -202,7 +202,8 @@ export default {
         if (data && data.results) {
           const { code, message, results, onlineCount } = data
           const { msg_type, msg_id, user_name } = results
-          if (msg_type !== "ACK") {
+          // 监测是不是异常断开-服务端会发一个pong 如果收到就返回pong
+          if (msg_type !== "PING") {
             if (msg_id) {
               delete this.sendingMsgs[msg_id]
             }
