@@ -8,13 +8,6 @@ module.exports = {
   rules: {
     'no-console': 'off',
     'no-debugger': 'off',
-    'prettier/prettier': [
-      'off',
-      {
-        singleQuote: true,
-        semi: false,
-      },
-    ],
     'vue/no-parsing-error': [
       'off',
       {

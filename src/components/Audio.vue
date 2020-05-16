@@ -2,11 +2,19 @@
   <div class="index" v-if="vedioId">
     <div class="title">弹幕测试标题</div>
     <div class="video-container">
-      <video ref="videoPlayer" src="~@/assets/test.mp4" preload="auto" class="video" controls="controls">您的浏览器不支持 video 标签</video>
+      <video
+        ref="videoPlayer"
+        src="~@/assets/test.mp4"
+        preload="auto"
+        class="video"
+        controls="controls"
+      >
+        您的浏览器不支持 video 标签
+      </video>
       <canvas ref="canvas" width="946" height="470" class="canvas"></canvas>
     </div>
 
-   <div class="footer">
+    <div class="footer">
       <div class="flex">
         <i class="iconfont icon-avatar" />
         <el-input v-model.trim="inputMsg" @keyup.enter.native="sendMsg" />
@@ -18,24 +26,27 @@
 
 <script>
 export default {
-  name: 'Aduio',
-  props:{
-    vedioId:{
+  name: "Aduio",
+  props: {
+    vedioId: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
   data() {
     return {
-      textList: ['富强民主文明和谐公正法治爱国敬业诚信友善','富强民主文明和谐公正法治爱国敬业诚信友善'],
+      textList: [
+        "富强民主文明和谐公正法治爱国敬业诚信友善",
+        "富强民主文明和谐公正法治爱国敬业诚信友善",
+      ],
       barrageList: [],
       canvas: null,
       w: null,
       h: null,
       ctx: null,
       vedioDom: null,
-      inputMsg:'',
-      animiate: null
+      inputMsg: "",
+      animiate: null,
     }
   },
   mounted() {
@@ -43,21 +54,20 @@ export default {
     let rect = this.canvas.getBoundingClientRect()
     this.w = rect.right - rect.left
     this.h = rect.bottom - rect.top
-    this.ctx = this.canvas.getContext('2d')
-    
+    this.ctx = this.canvas.getContext("2d")
+
     this.draw()
     this.vedioDom = this.$refs.videoPlayer
     let that = this
-    this.vedioDom.addEventListener('play',()=>{  
-     console.log('开始播放')
-     that.play()
-    });  
+    this.vedioDom.addEventListener("play", () => {
+      console.log("开始播放")
+      that.play()
+    })
 
-    this.vedioDom.addEventListener('pause',()=>{  
-     console.log('暂定播放')
-     that.stop()
-    })  
-    
+    this.vedioDom.addEventListener("pause", () => {
+      console.log("暂定播放")
+      that.stop()
+    })
   },
   methods: {
     play() {
@@ -82,7 +92,7 @@ export default {
         color: color,
         offset: offset,
         width: width,
-        font: '28px Arial'
+        font: "28px Arial",
       }
       this.barrageList.push(barrage)
     },
@@ -101,9 +111,9 @@ export default {
           this.drawText(b)
         }
       }
-     this.animiate = requestAnimationFrame(this.draw.bind(this))
+      this.animiate = requestAnimationFrame(this.draw.bind(this))
     },
-    stop(){
+    stop() {
       cancelAnimationFrame(this.animiate)
     },
     //绘制文字
@@ -115,7 +125,7 @@ export default {
 
     //获取随机颜色
     getColor() {
-      return '#' + Math.floor(Math.random() * 0xffffff).toString(16)
+      return "#" + Math.floor(Math.random() * 0xffffff).toString(16)
     },
 
     //获取随机top
@@ -129,17 +139,17 @@ export default {
       return +(Math.random() * 4).toFixed(1) + 1
     },
     sendMsg() {
-      if(!this.inputMsg) return
+      if (!this.inputMsg) return
       this.shoot(this.inputMsg)
-      this.inputMsg = ''
-    }
+      this.inputMsg = ""
+    },
   },
 }
 </script>
 
 <style lang="less" scoped>
 .index {
-  .title{
+  .title {
     width: 946px;
     margin: auto;
     padding: 10px;
@@ -159,11 +169,15 @@ export default {
       left: 0;
     }
   }
-  .footer{
+  .footer {
     width: 940px;
     margin: 10px auto;
-    .iconfont{font-size: 40px;margin-right: 5px;color:cornflowerblue;}
-    .flex{
+    .iconfont {
+      font-size: 40px;
+      margin-right: 5px;
+      color: cornflowerblue;
+    }
+    .flex {
       display: flex;
     }
   }

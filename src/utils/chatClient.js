@@ -1,5 +1,5 @@
 class chatClient {
-  constructor () {
+  constructor() {
     this.socket = null
     this.eventBus = {}
     this.connected = false
@@ -8,41 +8,41 @@ class chatClient {
       2: 'onimage',
       3: 'onsys',
       4: 'ondoctor',
-      5: 'onack'
+      5: 'onack',
     }
     // 5秒一次心跳监测 实现长连接
     setInterval(() => {
       this.isOpen && this.ping()
-    }, 5000) 
+    }, 5000)
   }
 
-  get isConnecting () {
+  get isConnecting() {
     const { socket } = this
     return socket ? socket.readyState === socket.CONNECTING : false
   }
-  get isOpen () {
+  get isOpen() {
     const { socket } = this
     return socket ? socket.readyState === socket.OPEN : false
   }
-  get isClosing () {
+  get isClosing() {
     const { socket } = this
     return socket ? socket.readyState === socket.CLOSING : false
   }
-  get isClose () {
+  get isClose() {
     const { socket } = this
     return socket ? socket.readyState === socket.CLOSED : true
   }
-  get isActivating () {
+  get isActivating() {
     return this.isConnecting || this.isOpen
   }
 
-  ping () {
+  ping() {
     this.send({
-      msg_type: 'PING'
+      msg_type: 'PING',
     })
   }
 
-  async init (url, keepEvent = false) {
+  async init(url, keepEvent = false) {
     return new Promise((resolve, reject) => {
       if (!keepEvent) {
         this.destroy()
@@ -50,25 +50,26 @@ class chatClient {
       }
       this.close()
       this.socket = new WebSocket(url)
-      this.socket.addEventListener('open', event => {
+      this.socket.addEventListener('open', (event) => {
         this.connected = true
+        this.isOpen && this.ping()
         this.emit('open', event)
         resolve()
         console.log(this.socket, 'socket连接成功')
       })
-      this.socket.addEventListener('message', event => {
+      this.socket.addEventListener('message', (event) => {
         const data = JSON.parse(event.data)
         this.emit('message', data)
         if (data.results && data.results.msg_type) {
           this.emit(this.msgEventMap[data.results.msg_type], data.results)
         }
       })
-      this.socket.addEventListener('error', event => {
+      this.socket.addEventListener('error', (event) => {
         this.emit('error', event)
         reject(event)
         console.log('socket出错', event)
       })
-      this.socket.addEventListener('close', event => {
+      this.socket.addEventListener('close', (event) => {
         this.socket = null
         this.connected = false
         this.emit('close', event)
@@ -77,21 +78,21 @@ class chatClient {
     })
   }
 
-  send (payload) {
+  send(payload) {
     if (!this.isOpen) {
       console.error('发送失败，socket未连接')
       return
     }
     this.socket.send(JSON.stringify(payload))
   }
-  close () {
+  close() {
     this.socket && this.socket.close()
     this.socket = null
   }
-  removeEvent () {
+  removeEvent() {
     this.eventBus = {}
   }
-  on (event, cb) {
+  on(event, cb) {
     if (this.eventBus[event]) {
       this.eventBus[event].push(cb)
     } else {
@@ -99,13 +100,15 @@ class chatClient {
     }
     return this
   }
-  destroy () {
+  destroy() {
     this.close()
     this.removeEvent()
   }
-  emit (event, args) {
+  emit(event, args) {
     if (Array.isArray(this.eventBus[event])) {
-      this.eventBus[event].forEach((cb) => { cb(args) })
+      this.eventBus[event].forEach((cb) => {
+        cb(args)
+      })
     }
   }
 }
