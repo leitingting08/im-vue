@@ -4,7 +4,10 @@
       <span class="boardcast"
         >{{ send_time | timeFormat }}
         <span class="name">{{ user_name }}<span v-if="self">（我）</span></span>
-        {{ msg_type === "ENTER" ? "进入" : "离开" }}房间</span
+        <span :class="msg_type === 'ENTER' ? 'colgreen' : 'colblue'">
+          {{ msg_type === "ENTER" ? "进入" : "离开" }}</span
+        >
+        房间</span
       >
     </div>
     <div v-if="msg_type === 'MESSAGE'" class="box-card-msg">
@@ -93,6 +96,12 @@ export default {
 @green: #00b9a3;
 .colorange {
   color: @orange;
+}
+.colgreen {
+  color: green;
+}
+.colblue {
+  color: blue;
 }
 .message-wrap {
   padding-bottom: 15px;

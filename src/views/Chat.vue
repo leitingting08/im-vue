@@ -57,34 +57,100 @@ export default {
       sendingMsgs: {}, // 待发送队列
       inputMsg: "",
       self: myName,
-      reConnectTimes: 0,
+      reconnectTimes: 0,
+      reconnectTimer: null,
     }
   },
-  created() {
-    if (myName) this.initSocket(myName)
-    this.getHistoryMsgs()
+  async created() {
+    await this.getHistoryMsgs()
+    await this.initChat()
   },
   mounted() {
     this.open()
-    this.handleChat()
-    // 监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口
-    window.onbeforeunload = function () {
-      this.chatClient.close()
-    }
   },
   methods: {
-    initSocket(username) {
-      this.chatClient.init(
-        `${wsURL}?user=${username}&room=${this.$route.params.id}`
-      )
+    async initChat() {
+      await this.initSocket()
+      await this.initSocketEvent()
+    },
+    async initSocket(force = false) {
+      const { chatClient } = this
+      if (!chatClient.isOpen || force) {
+        this.self &&
+          (await chatClient.init(
+            `${wsURL}?user=${this.self}&room=${this.$route.params.id}`
+          ))
+      } else {
+        clearInterval(this.reconnectTimer)
+      }
+    },
+    initSocketEvent() {
+      this.chatClient
+        .on("message", (data) => {
+          if (data && data.results) {
+            const { code, message, results, onlineCount } = data
+            const { msg_type, msg_id, user_name } = results
+            // 监测是不是异常断开-服务端会发一个pong 如果收到就返回pong
+            if (code === 0) {
+              if (msg_type !== "PING") {
+                console.log("接收", msg_id, this.sendingMsgs)
+                if (msg_id) {
+                  delete this.sendingMsgs[msg_id]
+                }
+                const alias = this.messages.findIndex(
+                  (item) => item.msg_id === msg_id
+                )
+                // if (this.messages.length)
+                //   this.$refs.messages[this.messages.length - 1].sending = false
+                // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
+                if (
+                  alias === -1 ||
+                  this.self !== user_name ||
+                  msg_type !== "MESSAGE"
+                ) {
+                  this.messages.push(results)
+                }
+                if (this.$refs.messages.length)
+                  this.$refs.messages.forEach((el) => {
+                    if (el.id === msg_id) {
+                      el.sending = false
+                    }
+                  })
+              }
+              this.total_count = onlineCount ? onlineCount : 0
+            } else {
+              this.$messages({
+                message: "网络异常，请检查网络",
+                type: "error",
+              })
+            }
+          }
+        })
+        .on("close", async () => {
+          if (navigator.onLine) {
+            this.reconnectTimes += 1
+            this.reconnectTimer = setInterval(() => {
+              this.reConnect()
+            }, 3000)
+          }
+        })
+        .on("open", () => {
+          console("open")
+          if (this.chatClient.isOpen) {
+            this.reconnectTimes = 0 // 重连成功归0
+            clearInterval(this.reconnectTimer)
+            return
+          }
+        })
     },
     async sendAgain(send_time, msg_content, msg_id) {
-      console.log(send_time, msg_content, msg_id)
-      delete this.sendingMsgs[send_time]
-      this.messages.splice(
-        this.messages.findIndex((i) => i.send_time === send_time),
-        1
-      )
+      // 发送失败重新发送
+      this.initSocketEvent()
+      // this.messages.splice(
+      //   this.messages.findIndex((i) => i.send_time === send_time),
+      //   1
+      // )
+      // if (this.self) this.messages.push(results)
       const timestamp = new Date().valueOf()
       const results = {
         msg_type: "MESSAGE",
@@ -93,23 +159,20 @@ export default {
         msg_content: msg_content,
         msg_id: msg_id,
       }
-      this.sendingMsgs[msg_id] = msg_content
       this.chatClient.send(results)
-      if (this.self) this.messages.push(results)
       await this.$nextTick()
-      this.$refs.messages.forEach((el) => {
-        console.log(el.id)
-        if (this.sendingMsgs[el.send_time] && el.id === msg_id) {
-          el.sending = true
-          el.sendError = false
-          // el.isResend = true
-        }
-      })
+      if (this.$refs.messages.length)
+        this.$refs.messages.forEach((el) => {
+          if (this.sendingMsgs[el.id] && el.id === msg_id) {
+            el.sending = true
+            el.sendError = false
+          }
+        })
       this.scrollBottom(true)
     },
     async sendMsg() {
       const timestamp = new Date().valueOf()
-      console.log(timestamp)
+      console.log("发送", timestamp)
       if (!this.inputMsg) return
       const results = {
         msg_type: "MESSAGE",
@@ -173,16 +236,17 @@ export default {
               })
               return
             }
-            this.initSocket(value)
-            this.handleChat()
+            // clearInterval(this.reconnectTimer)
             const res = await axios.post(userSaveUrl, { user_name: value })
             if (res.data.success) {
+              this.self = value
+              console.log(this.self, value)
+              await this.initChat()
               that.chatClient.send({
                 msg_type: "ENTER",
                 send_time: new Date().valueOf(),
                 user_name: value,
               })
-              this.self = value
               sessionStorage.setItem("USER_NAME", value)
               this.scrollBottom(true)
               done()
@@ -196,67 +260,21 @@ export default {
         })
       }
     },
-    handleChat() {
-      // 初始化链接 监听收到的消息
-      this.chatClient.on("message", (data) => {
-        if (data && data.results) {
-          const { code, message, results, onlineCount } = data
-          const { msg_type, msg_id, user_name } = results
-          // 监测是不是异常断开-服务端会发一个pong 如果收到就返回pong
-          if (msg_type !== "PING") {
-            if (msg_id) {
-              delete this.sendingMsgs[msg_id]
-            }
-            const alias = this.messages.findIndex(
-              (item) => item.msg_id === msg_id
-            )
-            // if (this.messages.length)
-            //   this.$refs.messages[this.messages.length - 1].sending = false
-            // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
-            if (
-              alias === -1 ||
-              this.self !== user_name ||
-              msg_type !== "MESSAGE"
-            ) {
-              this.messages.push(results)
-            }
-            this.$refs.messages.forEach((el) => {
-              if (el.id === msg_id) {
-                el.sending = false
-              }
-            })
-            this.total_count = onlineCount ? onlineCount : 0
-            this.scrollBottom(true)
-          }
-        }
-      })
-      this.chatClient.on("close", () => {
-        // 是否断网 socket断开事件触发快于navigator.onLine状态变更，延时再判断
-        setTimeout(() => {
-          console.log("navigator.onLine:", navigator.onLine)
-          if (navigator.onLine) {
-            this.reConnect()
-          }
-        }, 1000)
-      })
-      window.addEventListener("online", () => {
-        console.log("网络恢复连接")
-        this.reConnect()
-      })
-      this.chatClient.on("open", () => {
-        this.reConnectTimes = 0 // 重连成功归0
-      })
-    },
     reConnect() {
-      if (this.reConnectTimes > 20) {
+      console.log("重连", this.chatClient.isOpen)
+      if (this.chatClient.isOpen) {
+        clearInterval(this.reconnectTimer)
+        return
+      }
+      if (this.reconnectTimes > 20) {
         this.$message({
           message: `断线超过20次，请检查网络状况`,
           type: "error",
         })
         return
       }
-      this.reConnectTimes += 1
-      myName && this.initSocket(myName)
+      this.reconnectTimes += 1
+      this.initSocket(true)
     },
   },
 }

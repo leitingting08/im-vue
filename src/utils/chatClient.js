@@ -52,6 +52,7 @@ class chatClient {
       this.socket = new WebSocket(url)
       this.socket.addEventListener('open', (event) => {
         this.connected = true
+        this.isOpen && this.ping()
         this.emit('open', event)
         resolve()
         console.log(this.socket, 'socket连接成功')
