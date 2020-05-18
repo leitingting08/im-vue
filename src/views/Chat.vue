@@ -240,7 +240,7 @@ export default {
             const res = await axios.post(userSaveUrl, { user_name: value })
             if (res.data.success) {
               this.self = value
-              console.log(this.self, value)
+              await this.getHistoryMsgs()
               await this.initChat()
               that.chatClient.send({
                 msg_type: "ENTER",
