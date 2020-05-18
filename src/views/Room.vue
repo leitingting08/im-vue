@@ -10,9 +10,7 @@ export default {
   name: "Room",
   components: { Audio },
   data() {
-    return {
-      textList: [],
-    }
+    return {}
   },
 }
 </script>

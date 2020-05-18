@@ -4,7 +4,7 @@
       <span class="boardcast"
         >{{ send_time | timeFormat }}
         <span class="name">{{ user_name }}<span v-if="self">（我）</span></span>
-        <span :class="msg_type === 'ENTER' ? 'colgreen' : 'colblue'">
+        <span :class="msg_type === 'ENTER' ? 'colenter' : 'colleave'">
           {{ msg_type === "ENTER" ? "进入" : "离开" }}</span
         >
         房间</span
@@ -97,11 +97,11 @@ export default {
 .colorange {
   color: @orange;
 }
-.colgreen {
-  color: green;
+.colenter {
+  color: #29c8aa;
 }
-.colblue {
-  color: blue;
+.colleave {
+  color: #5259f4;
 }
 .message-wrap {
   padding-bottom: 15px;

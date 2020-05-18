@@ -35,9 +35,30 @@ export default {
   },
   data() {
     return {
+      /**
+       * @param {string} type 弹幕类型
+       * @param {string} value 弹幕内容
+       * @param {string} value 弹幕内容
+       * @param {string} value 弹幕内容
+       * @param {string} value 弹幕内容
+       * @param {string} value 弹幕内容
+       */
       textList: [
-        "富强民主文明和谐公正法治爱国敬业诚信友善",
-        "富强民主文明和谐公正法治爱国敬业诚信友善",
+        {
+          value: "富强民主文明和谐公正法治爱国敬业诚信友善",
+          time: 5,
+          color: "red",
+          speed: 1,
+          fontSize: 22,
+        },
+        {
+          value: "富强民主文明和谐公正法治爱国敬业诚信友善",
+          time: 10,
+          color: "#00a1f5",
+          speed: 1,
+          fontSize: 30,
+        },
+        { value: "富强民主文明和谐公正法治爱国敬业诚信友善", time: 15 },
       ],
       barrageList: [],
       canvas: null,
@@ -72,7 +93,6 @@ export default {
   methods: {
     play() {
       const { textList } = this
-      console.log(textList)
       let that = this
       textList.forEach((t) => {
         that.shoot(t)
