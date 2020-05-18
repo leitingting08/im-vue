@@ -92,7 +92,7 @@ export default {
             const { msg_type, msg_id, user_name } = results
             // 监测是不是异常断开-服务端会发一个pong 如果收到就返回pong
             if (code === 0) {
-              if (msg_type !== "PING") {
+              if (msg_type !== "PONG") {
                 console.log("接收", msg_id, this.sendingMsgs)
                 if (msg_id) {
                   delete this.sendingMsgs[msg_id]
