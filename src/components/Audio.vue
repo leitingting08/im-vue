@@ -7,11 +7,14 @@
         src="~@/assets/test.mp4"
         preload="auto"
         class="video"
-        controls="controls"
+        controls
       >
         您的浏览器不支持 video 标签
       </video>
-      <canvas ref="canvas" width="946" height="470" class="canvas"></canvas>
+      <canvas ref="canvas" class="canvas"></canvas>
+      <div class="controls">
+        <i class="el-icon-caret-right" />
+      </div>
     </div>
 
     <div class="footer">
@@ -168,6 +171,9 @@ export default {
 </script>
 
 <style lang="less" scoped>
+video::-webkit-media-controls {
+  // display: none !important;
+}
 .index {
   .title {
     width: 946px;
@@ -176,8 +182,8 @@ export default {
   }
   .video-container {
     position: relative;
-    width: 946px;
-    height: 532px;
+    max-width: 946px;
+    max-height: 532px;
     margin: auto;
     .video {
       width: 100%;
@@ -187,6 +193,8 @@ export default {
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
     }
   }
   .footer {

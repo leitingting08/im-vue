@@ -118,6 +118,7 @@ export default {
                   })
               }
               this.total_count = onlineCount ? onlineCount : 0
+              this.scrollBottom(true)
             } else {
               this.$messages({
                 message: "网络异常，请检查网络",
