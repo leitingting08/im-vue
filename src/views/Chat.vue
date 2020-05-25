@@ -110,7 +110,7 @@ export default {
                 ) {
                   this.messages.push(results)
                 }
-                if (this.$refs.messages.length)
+                if (this.$refs.messages && this.$refs.messages.length)
                   this.$refs.messages.forEach((el) => {
                     if (el.id === msg_id) {
                       el.sending = false
@@ -268,6 +268,7 @@ export default {
         return
       }
       if (this.reconnectTimes > 20) {
+        clearInterval(this.reconnectTimer)
         this.$message({
           message: `断线超过20次，请检查网络状况`,
           type: "error",
