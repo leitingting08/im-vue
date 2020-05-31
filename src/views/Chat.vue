@@ -22,9 +22,12 @@
         />
       </div>
     </div>
+    <span @click="scrollBottom(true)" class="backToBottom" v-show="scrolled">
+      <i class="el-icon-caret-bottom" />
+    </span>
     <div class="footer">
       <div class="flex">
-        <el-input v-model.trim="inputMsg" @keyup.enter.native="sendMsg" />
+        <el-input v-model="inputMsg" @keyup.enter.native="sendMsg" />
         <el-button type="primary" @click="sendMsg">发送</el-button>
       </div>
     </div>
@@ -59,6 +62,7 @@ export default {
       self: myName,
       reconnectTimes: 0,
       reconnectTimer: null,
+      scrolled: false,
     }
   },
   async created() {
@@ -67,8 +71,44 @@ export default {
   },
   mounted() {
     this.open()
+    this.$nextTick()
+    this.setScroll()
+    window.addEventListener(
+      "scroll",
+      this.throttle((e) => {
+        this.setScroll()
+      }),
+      true
+    )
   },
   methods: {
+    setScroll() {
+      const sHight = this.$refs.chat.scrollHeight
+      const wHeight = this.$refs.chat.scrollTop + this.$refs.chat.clientHeight
+      this.scrolled = wHeight !== sHight
+    },
+    throttle(fn, interval = 300) {
+      // 函数节流--eg:用于监听srcoll
+      let canRun = true
+      return function () {
+        if (!canRun) return
+        canRun = false
+        setTimeout(() => {
+          fn.apply(this, arguments)
+          canRun = true
+        }, interval)
+      }
+    },
+    debounce(fn, interval = 300) {
+      // 函数防抖--eg:用于远程联想搜索
+      let timeout = null
+      return function () {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+          fn.apply(this, arguments)
+        }, interval)
+      }
+    },
     async initChat() {
       await this.initSocket()
       await this.initSocketEvent()
@@ -100,8 +140,6 @@ export default {
                 const alias = this.messages.findIndex(
                   (item) => item.msg_id === msg_id
                 )
-                // if (this.messages.length)
-                //   this.$refs.messages[this.messages.length - 1].sending = false
                 // PING心跳 ENTER进入聊天室广播 MESSAGE消息收发
                 if (
                   alias === -1 ||
@@ -118,7 +156,6 @@ export default {
                   })
               }
               this.total_count = onlineCount ? onlineCount : 0
-              this.scrollBottom(true)
             } else {
               this.$messages({
                 message: "网络异常，请检查网络",
@@ -147,11 +184,6 @@ export default {
     async sendAgain(send_time, msg_content, msg_id) {
       // 发送失败重新发送
       this.initSocketEvent()
-      // this.messages.splice(
-      //   this.messages.findIndex((i) => i.send_time === send_time),
-      //   1
-      // )
-      // if (this.self) this.messages.push(results)
       const timestamp = new Date().valueOf()
       const results = {
         msg_type: "MESSAGE",
@@ -167,9 +199,9 @@ export default {
           if (this.sendingMsgs[el.id] && el.id === msg_id) {
             el.sending = true
             el.sendError = false
+            el.waiting()
           }
         })
-      this.scrollBottom(true)
     },
     async sendMsg() {
       const timestamp = new Date().valueOf()
@@ -216,7 +248,7 @@ export default {
       }
       this.messages = res.data.results
       this.total_count = res.data.onlineCount
-      this.scrollBottom(true)
+      this.scrollBottom()
     },
     open() {
       let that = this
@@ -237,15 +269,14 @@ export default {
               })
               return
             }
-            // clearInterval(this.reconnectTimer)
             const res = await axios.post(userSaveUrl, { user_name: value })
             if (res.data.success) {
               this.self = value
-              await this.getHistoryMsgs()
               await this.initChat()
               that.chatClient.send({
                 msg_type: "ENTER",
                 send_time: new Date().valueOf(),
+                msg_id: new Date().valueOf(),
                 user_name: value,
               })
               sessionStorage.setItem("USER_NAME", value)
@@ -311,7 +342,6 @@ export default {
     height: 100%;
     overflow-y: auto;
   }
-
   .footer {
     position: fixed;
     bottom: 0;
@@ -321,6 +351,23 @@ export default {
     .flex {
       display: flex;
     }
+  }
+  .backToBottom {
+    position: fixed;
+    bottom: 50px;
+    right: 20%;
+    background-color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: @green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    z-index: 5;
   }
 }
 </style>
