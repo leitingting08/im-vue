@@ -73,7 +73,6 @@ export default {
     async waiting() {
       await setTimeout(() => {
         if (this.isSending) {
-          console.log("senqq1", this.isSending)
           this.sending = false
           this.sendError = true
         }
